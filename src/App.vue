@@ -1,5 +1,6 @@
 <template>
   <div class="app-container">
+    <div class="game-message" v-if="gameOverMessage">{{ gameOverMessage }}</div>
     <div class="triangle">
       <div v-for="(row, rowIndex) in rows" :key="rowIndex" class="row">
         <DotComponent 
@@ -39,6 +40,61 @@ export default {
   },
   created() {
     this.initializeDots();
+  },
+  computed: {
+    /**
+     * Counts the number of non-empty dots remaining on the board.
+     * @returns {number} The count of default or selected dots
+     */
+    remainingDots() {
+      let count = 0;
+      for (let row of this.dotStates) {
+        for (let state of row) {
+          if (state !== 'empty') {
+            count++;
+          }
+        }
+      }
+      return count;
+    },
+    /**
+     * Checks if there are any valid moves remaining.
+     * @returns {boolean} True if at least one valid move exists
+     */
+    hasValidMoves() {
+      for (let fromRow = 0; fromRow < this.rows.length; fromRow++) {
+        for (let fromIndex = 0; fromIndex < this.rows[fromRow]; fromIndex++) {
+          if (this.dotStates[fromRow][fromIndex] !== 'empty') {
+            for (let toRow = 0; toRow < this.rows.length; toRow++) {
+              for (let toIndex = 0; toIndex < this.rows[toRow]; toIndex++) {
+                if (this.dotStates[toRow][toIndex] === 'empty') {
+                  if (this.getValidMoves(fromRow, fromIndex, toRow, toIndex)) {
+                    return true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      return false;
+    },
+    /**
+     * Returns the appropriate game over message based on remaining dots.
+     * @returns {string|null} The message to display, or null if game is not over
+     */
+    gameOverMessage() {
+      if (this.customResetMode || this.hasValidMoves) {
+        return null;
+      }
+      
+      const count = this.remainingDots;
+      if (count === 1) return 'Congratulations! You\'re a genius!';
+      if (count === 2) return 'Good job! Almost perfect.';
+      if (count === 3) return 'Better luck next time.';
+      if (count >= 4) return 'Is that all you got?! Try harder.';
+      return null;
+    }
   },
   methods: {
     /**
@@ -241,6 +297,16 @@ export default {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+
+.game-message {
+  position: absolute;
+  top: 80px;
+  font-size: 36px;
+  font-weight: bold;
+  color: #e74c3c;
+  text-align: center;
+  max-width: 80%;
 }
 
 .button-container {
