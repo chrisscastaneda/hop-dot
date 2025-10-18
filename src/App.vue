@@ -11,6 +11,7 @@
         />
       </div>
     </div>
+    <button class="reset-button" @click="resetGame">Reset Game</button>
   </div>
 </template>
 
@@ -36,6 +37,14 @@ export default {
     this.initializeDots();
   },
   methods: {
+    /**
+     * Resets the game by clearing the selected dot and re-initializing all dots.
+     * @returns {void}
+     */
+    resetGame() {
+      this.selectedDot = null;
+      this.initializeDots();
+    },
     /**
      * Initializes the dot states for the game board.
      * Sets all dots to 'default' state except one randomly selected dot which is set to 'empty'.
@@ -192,9 +201,11 @@ export default {
 .app-container {
   height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   background: #f0f0f0;
+  position: relative;
 }
 
 .triangle {
@@ -208,5 +219,23 @@ export default {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+
+.reset-button {
+  position: absolute;
+  bottom: 30px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  background: #ddd;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.reset-button:hover {
+  background: #ccc;
 }
 </style>
