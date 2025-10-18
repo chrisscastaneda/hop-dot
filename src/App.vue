@@ -28,13 +28,19 @@ export default {
       defaultColor: '#4a90e2',
       emptyColor: '#d3d3d3',
       selectedColor: '#2ecc71',
-      dotStates: []
+      dotStates: [],
+      selectedDot: null
     };
   },
   created() {
     this.initializeDots();
   },
   methods: {
+    /**
+     * Initializes the dot states for the game board.
+     * Sets all dots to 'default' state except one randomly selected dot which is set to 'empty'.
+     * @returns {void}
+     */
     initializeDots() {
       this.dotStates = this.rows.map((numDots) => {
         return Array(numDots).fill('default');
@@ -54,12 +60,25 @@ export default {
         }
       }
     },
+    /**
+     * Gets the color for a dot based on its current state.
+     * @param {number} rowIndex - The zero-based row index of the dot
+     * @param {number} dotIndex - The one-based dot index within the row
+     * @returns {string} The hex color code for the dot's current state
+     */
     getDotColor(rowIndex, dotIndex) {
       const state = this.dotStates[rowIndex][dotIndex - 1];
       if (state === 'default') return this.defaultColor;
       if (state === 'selected') return this.selectedColor;
       return this.emptyColor;
     },
+    /**
+     * Calculates the display number for a dot based on its position.
+     * Numbers are sequential from 1-15, starting at the top of the triangle.
+     * @param {number} rowIndex - The zero-based row index of the dot
+     * @param {number} dotIndex - The one-based dot index within the row
+     * @returns {number} The display number for the dot (1-15)
+     */
     getDotNumber(rowIndex, dotIndex) {
       let number = 1;
       for (let i = 0; i < rowIndex; i++) {
@@ -67,15 +86,103 @@ export default {
       }
       return number + dotIndex - 1;
     },
+    /**
+     * Handles click events on dots and manages game state transitions.
+     * - Clicking a default dot selects it
+     * - Clicking a selected dot deselects it
+     * - Clicking an empty dot attempts to move the selected dot there
+     * @param {number} rowIndex - The zero-based row index of the clicked dot
+     * @param {number} dotIndex - The one-based dot index within the row
+     * @returns {void}
+     */
     changeDotColor(rowIndex, dotIndex) {
-      const currentState = this.dotStates[rowIndex][dotIndex - 1];
-      if (currentState === 'empty') return;
+      const arrayIndex = dotIndex - 1;
+      const currentState = this.dotStates[rowIndex][arrayIndex];
       
       if (currentState === 'default') {
-        this.dotStates[rowIndex][dotIndex - 1] = 'selected';
+        if (this.selectedDot) {
+          this.dotStates[this.selectedDot.row][this.selectedDot.index] = 'default';
+        }
+        this.dotStates[rowIndex][arrayIndex] = 'selected';
+        this.selectedDot = { row: rowIndex, index: arrayIndex };
       } else if (currentState === 'selected') {
-        this.dotStates[rowIndex][dotIndex - 1] = 'default';
+        this.dotStates[rowIndex][arrayIndex] = 'default';
+        this.selectedDot = null;
+      } else if (currentState === 'empty' && this.selectedDot) {
+        this.tryMove(this.selectedDot.row, this.selectedDot.index, rowIndex, arrayIndex);
       }
+    },
+    /**
+     * Attempts to execute a move from one position to another.
+     * If valid, removes the jumping dot and middle dot, and places selected dot at destination.
+     * @param {number} fromRow - The zero-based row index of the source dot
+     * @param {number} fromIndex - The zero-based dot index of the source dot
+     * @param {number} toRow - The zero-based row index of the destination dot
+     * @param {number} toIndex - The zero-based dot index of the destination dot
+     * @returns {void}
+     */
+    tryMove(fromRow, fromIndex, toRow, toIndex) {
+      const moves = this.getValidMoves(fromRow, fromIndex, toRow, toIndex);
+      
+      if (moves) {
+        this.dotStates[fromRow][fromIndex] = 'empty';
+        this.dotStates[moves.midRow][moves.midIndex] = 'empty';
+        this.dotStates[toRow][toIndex] = 'selected';
+        this.selectedDot = { row: toRow, index: toIndex };
+      }
+    },
+    /**
+     * Validates a move and returns the middle dot position if valid.
+     * Checks if the move is exactly 2 positions away in a valid hexagonal direction
+     * and that there is a default dot in between to jump over.
+     * @param {number} fromRow - The zero-based row index of the source dot
+     * @param {number} fromIndex - The zero-based dot index of the source dot
+     * @param {number} toRow - The zero-based row index of the destination dot
+     * @param {number} toIndex - The zero-based dot index of the destination dot
+     * @returns {Object|null} Object with midRow and midIndex if valid, null otherwise
+     */
+    getValidMoves(fromRow, fromIndex, toRow, toIndex) {
+      const rowDiff = toRow - fromRow;
+      const indexDiff = toIndex - fromIndex;
+      
+      let midRow, midIndex;
+      
+      if (rowDiff === 0 && Math.abs(indexDiff) === 2) {
+        midRow = fromRow;
+        midIndex = fromIndex + indexDiff / 2;
+      }
+      else if (rowDiff === 2 && indexDiff === 0) {
+        midRow = fromRow + 1;
+        midIndex = fromIndex;
+      }
+      else if (rowDiff === 2 && indexDiff === 2) {
+        midRow = fromRow + 1;
+        midIndex = fromIndex + 1;
+      }
+      else if (rowDiff === -2 && indexDiff === 0) {
+        midRow = fromRow - 1;
+        midIndex = fromIndex;
+      }
+      else if (rowDiff === -2 && indexDiff === -2) {
+        midRow = fromRow - 1;
+        midIndex = fromIndex - 1;
+      }
+      else if (rowDiff === -2 && Math.abs(indexDiff) === 2) {
+        midRow = fromRow - 1;
+        midIndex = fromIndex + indexDiff / 2;
+      }
+      else {
+        return null;
+      }
+      
+      if (midRow < 0 || midRow >= this.rows.length) return null;
+      if (midIndex < 0 || midIndex >= this.rows[midRow]) return null;
+      
+      if (this.dotStates[midRow][midIndex] === 'default') {
+        return { midRow, midIndex };
+      }
+      
+      return null;
     }
   }
 };
