@@ -11,7 +11,10 @@
         />
       </div>
     </div>
-    <button class="reset-button" @click="resetGame">Reset Game</button>
+    <div class="button-container">
+      <button class="reset-button" @click="resetGame">Reset Game</button>
+      <button class="reset-button" @click="customReset">Custom Reset</button>
+    </div>
   </div>
 </template>
 
@@ -30,7 +33,8 @@ export default {
       emptyColor: '#d3d3d3',
       selectedColor: '#2ecc71',
       dotStates: [],
-      selectedDot: null
+      selectedDot: null,
+      customResetMode: false
     };
   },
   created() {
@@ -43,7 +47,19 @@ export default {
      */
     resetGame() {
       this.selectedDot = null;
+      this.customResetMode = false;
       this.initializeDots();
+    },
+    /**
+     * Custom reset that sets all dots to default state and waits for user to select empty dot.
+     * @returns {void}
+     */
+    customReset() {
+      this.selectedDot = null;
+      this.customResetMode = true;
+      this.dotStates = this.rows.map((numDots) => {
+        return Array(numDots).fill('default');
+      });
     },
     /**
      * Initializes the dot states for the game board.
@@ -107,6 +123,12 @@ export default {
     changeDotColor(rowIndex, dotIndex) {
       const arrayIndex = dotIndex - 1;
       const currentState = this.dotStates[rowIndex][arrayIndex];
+      
+      if (this.customResetMode) {
+        this.dotStates[rowIndex][arrayIndex] = 'empty';
+        this.customResetMode = false;
+        return;
+      }
       
       if (currentState === 'default') {
         if (this.selectedDot) {
@@ -221,9 +243,14 @@ export default {
   gap: 10px;
 }
 
-.reset-button {
+.button-container {
   position: absolute;
   bottom: 30px;
+  display: flex;
+  gap: 15px;
+}
+
+.reset-button {
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
