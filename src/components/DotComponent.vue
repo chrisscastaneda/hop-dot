@@ -1,30 +1,27 @@
 <template>
   <div 
     class="dot" 
-    :style="{ background: currentColor }"
-    @click="changeColor"
-  ></div>
+    :style="{ background: color }"
+    @click="$emit('click')"
+  >
+    {{ number }}
+  </div>
 </template>
 
 <script>
 export default {
   name: 'DotComponent',
-  data() {
-    return {
-      colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe'],
-      colorIndex: 0
-    };
-  },
-  computed: {
-    currentColor() {
-      return this.colors[this.colorIndex];
+  props: {
+    color: {
+      type: String,
+      required: true
+    },
+    number: {
+      type: Number,
+      required: true
     }
   },
-  methods: {
-    changeColor() {
-      this.colorIndex = (this.colorIndex + 1) % this.colors.length;
-    }
-  }
+  emits: ['click']
 };
 </script>
 
@@ -35,5 +32,14 @@ export default {
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin: 5px;
+  border: 3px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 </style>
