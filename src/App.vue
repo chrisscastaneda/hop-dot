@@ -12,6 +12,7 @@
         />
       </div>
     </div>
+    <div class="instruction-message" v-if="customResetMode">To start, pick the dot to be empty.</div>
     <div class="button-container">
       <button class="reset-button" @click="resetGame">Reset Game</button>
       <button class="reset-button" @click="customReset">Custom Reset</button>
@@ -307,6 +308,14 @@ export default {
   color: #e74c3c;
   text-align: center;
   max-width: 80%;
+}
+
+.instruction-message {
+  position: absolute;
+  bottom: 90px;
+  font-size: 18px;
+  color: #555;
+  text-align: center;
 }
 
 .button-container {
