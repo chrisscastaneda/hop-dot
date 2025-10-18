@@ -30,7 +30,6 @@ export default {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  cursor: pointer;
   transition: background 0.3s ease;
   margin: 5px;
   border: 3px solid #333;
@@ -41,5 +40,9 @@ export default {
   font-size: 16px;
   color: #fff;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.dot:not([style*="background: #d3d3d3"]) {
+  cursor: pointer;
 }
 </style>

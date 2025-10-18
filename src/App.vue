@@ -25,13 +25,10 @@ export default {
   data() {
     return {
       rows: [1, 2, 3, 4, 5],
-      allColors: [
-        '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe',
-        '#fd79a8', '#fdcb6e', '#e17055', '#00b894', '#00cec9', '#0984e3',
-        '#fab1a0', '#74b9ff', '#a29bfe', '#dfe6e9', '#ff7675', '#fd79a8',
-        '#ffeaa7', '#55efc4', '#81ecec', '#74b9ff', '#b2bec3', '#636e72'
-      ],
-      dotColors: []
+      defaultColor: '#4a90e2',
+      emptyColor: '#d3d3d3',
+      selectedColor: '#2ecc71',
+      dotStates: []
     };
   },
   created() {
@@ -39,18 +36,29 @@ export default {
   },
   methods: {
     initializeDots() {
-      let colorIndex = 0;
-      this.dotColors = this.rows.map((numDots, rowIndex) => {
-        const row = [];
-        for (let i = 0; i < numDots; i++) {
-          row.push(this.allColors[colorIndex % this.allColors.length]);
-          colorIndex++;
-        }
-        return row;
+      this.dotStates = this.rows.map((numDots) => {
+        return Array(numDots).fill('default');
       });
+      
+      const totalDots = 15;
+      const randomDot = Math.floor(Math.random() * totalDots);
+      let count = 0;
+      
+      for (let rowIndex = 0; rowIndex < this.rows.length; rowIndex++) {
+        for (let dotIndex = 0; dotIndex < this.rows[rowIndex]; dotIndex++) {
+          if (count === randomDot) {
+            this.dotStates[rowIndex][dotIndex] = 'empty';
+            return;
+          }
+          count++;
+        }
+      }
     },
     getDotColor(rowIndex, dotIndex) {
-      return this.dotColors[rowIndex][dotIndex - 1];
+      const state = this.dotStates[rowIndex][dotIndex - 1];
+      if (state === 'default') return this.defaultColor;
+      if (state === 'selected') return this.selectedColor;
+      return this.emptyColor;
     },
     getDotNumber(rowIndex, dotIndex) {
       let number = 1;
@@ -60,20 +68,14 @@ export default {
       return number + dotIndex - 1;
     },
     changeDotColor(rowIndex, dotIndex) {
-      const currentColor = this.dotColors[rowIndex][dotIndex - 1];
-      const usedColors = this.dotColors.flat();
-      const availableColors = this.allColors.filter(color => !usedColors.includes(color) || color === currentColor);
+      const currentState = this.dotStates[rowIndex][dotIndex - 1];
+      if (currentState === 'empty') return;
       
-      let newColor;
-      if (availableColors.length > 1) {
-        const filtered = availableColors.filter(c => c !== currentColor);
-        newColor = filtered[Math.floor(Math.random() * filtered.length)];
-      } else {
-        const otherColors = this.allColors.filter(c => c !== currentColor);
-        newColor = otherColors[Math.floor(Math.random() * otherColors.length)];
+      if (currentState === 'default') {
+        this.dotStates[rowIndex][dotIndex - 1] = 'selected';
+      } else if (currentState === 'selected') {
+        this.dotStates[rowIndex][dotIndex - 1] = 'default';
       }
-      
-      this.dotColors[rowIndex][dotIndex - 1] = newColor;
     }
   }
 };
