@@ -24,7 +24,7 @@
 import DotComponent from './components/DotComponent.vue';
 
 export default {
-  name: 'App',
+  name: 'HopDot',
   components: {
     DotComponent
   },

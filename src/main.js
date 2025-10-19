@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import App from './App.vue';
+import HopDot from './HopDot.vue';
 import './style.css';
 
-createApp(App).mount('#app');
+createApp(HopDot).mount('#app');
