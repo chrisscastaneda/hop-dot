@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="hop-dot-app">
     <div class="game-message" v-if="gameOverMessage">{{ gameOverMessage }}</div>
     <div class="triangle">
       <div v-for="(row, rowIndex) in rows" :key="rowIndex" class="row">
@@ -277,7 +277,7 @@ export default {
 </script>
 
 <style scoped>
-.app-container {
+.hop-dot-app {
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -309,6 +309,7 @@ export default {
   color: #e74c3c;
   text-align: center;
   max-width: 80%;
+  z-index: 1000;
 }
 
 .instruction-message {
