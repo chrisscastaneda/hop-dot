@@ -292,6 +292,7 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  transform: translateY(-10vh);
 }
 
 .row {
@@ -312,7 +313,7 @@ export default {
 
 .instruction-message {
   position: absolute;
-  bottom: 90px;
+  bottom: 150px;
   font-size: 18px;
   color: #555;
   text-align: center;
@@ -320,7 +321,7 @@ export default {
 
 .button-container {
   position: absolute;
-  bottom: 30px;
+  bottom: 90px;
   display: flex;
   gap: 15px;
 }
