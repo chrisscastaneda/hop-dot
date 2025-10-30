@@ -11,6 +11,19 @@
           @click="changeDotColor(rowIndex, dotIndex)"
         />
       </div>
+      <div 
+        v-if="jumpAnimation" 
+        class="jumping-dot"
+        :class="{ animating: animating }"
+        :style="jumpDotStyle"
+      >
+        {{ jumpAnimation.number }}
+      </div>
+      <div 
+        v-if="jumpAnimation && jumpAnimation.showPoof"
+        class="poof-effect"
+        :style="poofStyle"
+      ></div>
     </div>
     <div class="instruction-message" v-if="customResetMode">To start, pick the dot to be empty.</div>
     <div class="button-container">
@@ -36,7 +49,9 @@ export default {
       selectedColor: '#2ecc71',
       dotStates: [],
       selectedDot: null,
-      customResetMode: false
+      customResetMode: false,
+      animating: false,
+      jumpAnimation: null
     };
   },
   created() {
@@ -95,6 +110,38 @@ export default {
       if (count === 3) return 'Better luck next time.';
       if (count >= 4) return 'Is that all you got?! Try harder.';
       return null;
+    },
+    /**
+     * Calculates CSS styles for the jumping dot animation.
+     * @returns {Object} Style object with position and color
+     */
+    jumpDotStyle() {
+      if (!this.jumpAnimation) return {};
+      
+      const { fromPos, toPos, color } = this.jumpAnimation;
+      
+      return {
+        '--from-x': `${fromPos.x}px`,
+        '--from-y': `${fromPos.y}px`,
+        '--to-x': `${toPos.x}px`,
+        '--to-y': `${toPos.y}px`,
+        background: color,
+        left: `${fromPos.x}px`,
+        top: `${fromPos.y}px`
+      };
+    },
+    /**
+     * Calculates CSS styles for the poof effect.
+     * @returns {Object} Style object with position
+     */
+    poofStyle() {
+      if (!this.jumpAnimation || !this.jumpAnimation.midPos) return {};
+      
+      const { midPos } = this.jumpAnimation;
+      return {
+        left: `${midPos.x}px`,
+        top: `${midPos.y}px`
+      };
     }
   },
   methods: {
@@ -105,6 +152,8 @@ export default {
     resetGame() {
       this.selectedDot = null;
       this.customResetMode = false;
+      this.animating = false;
+      this.jumpAnimation = null;
       this.initializeDots();
     },
     /**
@@ -114,6 +163,8 @@ export default {
     customReset() {
       this.selectedDot = null;
       this.customResetMode = true;
+      this.animating = false;
+      this.jumpAnimation = null;
       this.dotStates = this.rows.map((numDots) => {
         return Array(numDots).fill('default');
       });
@@ -178,6 +229,8 @@ export default {
      * @returns {void}
      */
     changeDotColor(rowIndex, dotIndex) {
+      if (this.animating) return;
+      
       const arrayIndex = dotIndex - 1;
       const currentState = this.dotStates[rowIndex][arrayIndex];
       
@@ -213,11 +266,63 @@ export default {
       const moves = this.getValidMoves(fromRow, fromIndex, toRow, toIndex);
       
       if (moves) {
+        this.animating = true;
+        
+        const fromPos = this.getDotPosition(fromRow, fromIndex);
+        const toPos = this.getDotPosition(toRow, toIndex);
+        const midPos = this.getDotPosition(moves.midRow, moves.midIndex);
+        const number = this.getDotNumber(fromRow, fromIndex + 1);
+        
+        this.jumpAnimation = {
+          fromPos,
+          toPos,
+          midPos,
+          color: this.selectedColor,
+          number,
+          showPoof: false
+        };
+        
         this.dotStates[fromRow][fromIndex] = 'empty';
-        this.dotStates[moves.midRow][moves.midIndex] = 'empty';
-        this.dotStates[toRow][toIndex] = 'selected';
-        this.selectedDot = { row: toRow, index: toIndex };
+        this.selectedDot = null;
+        
+        setTimeout(() => {
+          this.animating = true;
+        }, 10);
+        
+        setTimeout(() => {
+          this.jumpAnimation.showPoof = true;
+          this.dotStates[moves.midRow][moves.midIndex] = 'empty';
+        }, 600);
+        
+        setTimeout(() => {
+          this.dotStates[toRow][toIndex] = 'selected';
+          this.selectedDot = { row: toRow, index: toIndex };
+          this.jumpAnimation = null;
+          this.animating = false;
+        }, 900);
       }
+    },
+    /**
+     * Gets the absolute position of a dot on screen.
+     * @param {number} row - The zero-based row index
+     * @param {number} index - The zero-based dot index
+     * @returns {Object} Object with x and y coordinates
+     */
+    getDotPosition(row, index) {
+      const rowElement = document.querySelectorAll('.triangle .row')[row];
+      if (!rowElement) return { x: 0, y: 0 };
+      
+      const dots = rowElement.querySelectorAll('.dot');
+      const dotElement = dots[index];
+      if (!dotElement) return { x: 0, y: 0 };
+      
+      const triangleRect = document.querySelector('.triangle').getBoundingClientRect();
+      const dotRect = dotElement.getBoundingClientRect();
+      
+      return {
+        x: dotRect.left - triangleRect.left + dotRect.width / 2,
+        y: dotRect.top - triangleRect.top + dotRect.height / 2
+      };
     },
     /**
      * Validates a move and returns the middle dot position if valid.
@@ -293,6 +398,7 @@ export default {
   align-items: center;
   gap: 10px;
   transform: translateY(-10vh);
+  position: relative;
 }
 
 .row {
@@ -341,5 +447,70 @@ export default {
 
 .reset-button:hover {
   background: #ccc;
+}
+
+.jumping-dot {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.jumping-dot.animating {
+  animation: jumpAnimation 450ms cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes jumpAnimation {
+  0% {
+    left: var(--from-x);
+    top: var(--from-y);
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    left: calc((var(--from-x) + var(--to-x)) / 2);
+    top: calc((var(--from-y) + var(--to-y)) / 2 - 30px);
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    left: var(--to-x);
+    top: var(--to-y);
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.poof-effect {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(211, 211, 211, 0.8) 0%, rgba(211, 211, 211, 0) 70%);
+  animation: poofAnimation 300ms ease-out;
+  pointer-events: none;
+  z-index: 99;
+}
+
+@keyframes poofAnimation {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
 }
 </style>
