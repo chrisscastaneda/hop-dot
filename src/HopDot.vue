@@ -454,7 +454,7 @@ export default {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  border: 3px solid #333;
+  border: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -465,7 +465,42 @@ export default {
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 100;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 
+    inset -4px -4px 8px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.jumping-dot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(-25deg);
+  width: 8px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  opacity: 0.5;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+}
+
+.jumping-dot::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 50%);
+  pointer-events: none;
 }
 
 .jumping-dot.animating {
